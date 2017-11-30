@@ -1,0 +1,101 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Metadata: 
+  License: Apache-2.0
+Description: '
+template name: SecurityPolicy0BadTemplate.yml
+template type: bad
+Level: 3
+Number of violations: many
+Security policy: 
+Policy 2. Monitoring and Logging 
+Subrule1: Any ELB and CloudFront have to be created with logging enabled.
+Subrule2: Any EC2 has to have a tags Name, Role, Owner, CostCenter'
+Resources:
+  myEC2One:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: ami-8536d6e7
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - Ref: "MySecurityGroup"
+      SubnetId: subnet-b1ae79c6
+  myEC2Two:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: ami-8536d6e7
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - Ref: "MySecurityGroup"
+      SubnetId: subnet-b1ae79c6
+      Tags:
+        -
+          Key: Type
+          Value: catanddoglol
+        -
+          Key: Env
+          Value: test 
+  ### Create ELB
+  myELB:
+    Type: "AWS::ElasticLoadBalancing::LoadBalancer"
+    Properties:
+      Listeners:
+      - LoadBalancerPort: 80
+        InstancePort: 80
+        Protocol: HTTP 
+      Subnets: 
+        -
+          subnet-b1ae79c6
+  ### Create ELB
+  myELBsecond:
+    Type: "AWS::ElasticLoadBalancing::LoadBalancer"
+    Properties:
+      AccessLoggingPolicy:
+        EmitInterval: 60
+        Enabled: false
+        S3BucketName: ctf0302-s3bucket-1cc2ltw0hx41g
+      Listeners:
+      - LoadBalancerPort: 80
+        InstancePort: 80
+        Protocol: HTTP 
+      Subnets: 
+        -
+          subnet-b1ae79c6
+  ### Create CloudFront
+  myDistribution: 
+    Type: "AWS::CloudFront::Distribution"
+    Properties: 
+      DistributionConfig: 
+        Origins: 
+          - 
+            DomainName: "test.example.com"
+            Id: "myCustomOrigin"
+            CustomOriginConfig: 
+              HTTPPort: "80"
+              HTTPSPort: "443"
+              OriginProtocolPolicy: "http-only"
+        Enabled: "true"
+        Comment: "TestDistribution"
+        DefaultRootObject: "index.html"
+        DefaultCacheBehavior: 
+          TargetOriginId: "myCustomOrigin"
+          SmoothStreaming: "false"
+          ForwardedValues: 
+            QueryString: "false"
+            Cookies: 
+              Forward: "all"
+          ViewerProtocolPolicy: "https-only"
+        CustomErrorResponses: 
+          - 
+            ErrorCode: "404"
+            ResponsePagePath: "/error-pages/404.html"
+            ResponseCode: "200"
+            ErrorCachingMinTTL: "30"
+        PriceClass: "PriceClass_200"
+        Restrictions: 
+          GeoRestriction: 
+            RestrictionType: "whitelist"
+            Locations: 
+              - "AQ"
+              - "CV"
+        ViewerCertificate: 
+          CloudFrontDefaultCertificate: "true"

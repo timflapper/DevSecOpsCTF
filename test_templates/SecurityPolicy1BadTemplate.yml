@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Metadata: 
+  License: Apache-2.0
+Description: '
+template name: SecurityPolicy1BadTemplate.yml
+template type: bad
+Level: 2
+Number of violations: many
+Security policy:
+Policy 1. Identity and Access Control
+Subrule1: IAM Policy Elements: Action *, IAM or Organizations cannot be specified in "IAM inline policies" to create IAM users. 
+Subrule2: Only support or cloudwatch related "IAM managed policies" can be specified to create IAM users.
+Subrule3: Any EC2 must be created with IAM role to access other services'
+Resources:
+  IAMuserOne: 
+      Type: "AWS::IAM::User"
+      Properties: 
+        Path: "/"
+        UserName: iampasschange
+        Policies: 
+          - PolicyName: IAMpasswordchange
+            PolicyDocument: 
+              Version: 2012-10-17
+              Statement:
+                - Effect: Allow
+                  Action: 'iam:ChangePassword'
+                  Resource: 'arn:aws:iam::*:user/${aws:username}'
+                - Effect: Allow
+                  Action: 'organizations:*'
+                  Resource: '*'
+                - Sid: AdministoratorAccess
+                  Effect: Allow
+                  Action: "*"
+                  Resource: "*"
+  IAMuserTwo: 
+      Type: "AWS::IAM::User"
+      Properties: 
+        Path: "/"
+        UserName: 
+          Ref: UserName
+        ManagedPolicyArns: 
+          - arn:aws:iam::aws:policy/AmazonPollyFullAccess 
+          - arn:aws:iam::aws:policy/AmazonKinesisFirehoseReadOnlyAccess 
+          - arn:aws:iam::aws:policy/AmazonKinesisFirehoseFullAccess 
+          - arn:aws:iam::aws:policy/AmazonSSMFullAccess 
+          - arn:aws:iam::aws:policy/AmazonRedshiftFullAccess  
+  ### Create EC2
+  myEC2One:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: ami-8536d6e7
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - Ref: "MySecurityGroup"
+      SubnetId: subnet-b1ae79c6
+      Tags:
+        -
+          Key: Role
+          Value: dev
+        -
+          Key: Owner
+          Value: dev
+        -
+          Key: Name
+          Value: dev 
+        -
+          Key: CostCenter
+          Value: dev

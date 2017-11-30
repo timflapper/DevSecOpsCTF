@@ -1,0 +1,99 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Metadata: 
+  License: Apache-2.0
+Description: '
+template name: SecurityPolicy3BadTemplate.yml
+template type: bad
+Level: 4
+Number of violations: many
+Security policy: Policy 3. Data Encryption/Data protection 
+Subrule1: Any EBS volume for EC2 (except root volume) and RDS needs to be encrypted
+Subrule2: Any traffic to Cloudfront needs to be encrypted by using https protocol'
+Resources:
+  ### Create EC2
+  myEC2One:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: ami-8536d6e7
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - Ref: "MySecurityGroup"
+      SubnetId: subnet-b1ae79c6
+      BlockDeviceMappings: 
+        - DeviceName: "/dev/sdm"
+          Ebs: 
+            VolumeType: "io1"
+            Iops: "200"
+            Encrypted: false
+            DeleteOnTermination: "true"
+            VolumeSize: "20"
+        - DeviceName: "/dev/sdn"
+          Ebs: 
+            VolumeType: "io1"
+            Iops: "200"
+            DeleteOnTermination: "true"
+            VolumeSize: "20"
+  ### Create CloudFront
+  myDistribution: 
+    Type: "AWS::CloudFront::Distribution"
+    Properties: 
+      DistributionConfig: 
+        Origins: 
+          - 
+            DomainName: "test.example.com"
+            Id: "myCustomOrigin"
+            CustomOriginConfig: 
+              HTTPPort: "80"
+              HTTPSPort: "443"
+              OriginProtocolPolicy: "http-only"
+        Enabled: "true"
+        Comment: "TestDistribution"
+        DefaultRootObject: "index.html"
+        DefaultCacheBehavior: 
+          TargetOriginId: "myCustomOrigin"
+          SmoothStreaming: "false"
+          ForwardedValues: 
+            QueryString: "false"
+            Cookies: 
+              Forward: "all"
+          ViewerProtocolPolicy: redirect-to-https
+        CustomErrorResponses: 
+          - 
+            ErrorCode: "404"
+            ResponsePagePath: "/error-pages/404.html"
+            ResponseCode: "200"
+            ErrorCachingMinTTL: "30"
+        PriceClass: "PriceClass_200"
+        Restrictions: 
+          GeoRestriction: 
+            RestrictionType: "whitelist"
+            Locations: 
+              - "AQ"
+              - "CV"
+        ViewerCertificate: 
+          CloudFrontDefaultCertificate: "true"
+  myDBone:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: '100'
+      DBInstanceClass: db.t2.small
+      Engine: MySQL
+      Iops: '1000'
+      MasterUsername: awsuser
+      MasterUserPassword: awsRe1nvent
+      VPCSecurityGroups: 
+      - !GetAtt MySecurityGroup.GroupId 
+      StorageEncrypted: false
+      BackupRetentionPeriod: 0
+  myDBtwo:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: '100'
+      DBInstanceClass: db.t2.small
+      Engine: MySQL
+      Iops: '1000'
+      MasterUsername: awsuser
+      MasterUserPassword: awsRe1nvent
+      VPCSecurityGroups: 
+      - !GetAtt MySecurityGroup.GroupId 
+      BackupRetentionPeriod: 0

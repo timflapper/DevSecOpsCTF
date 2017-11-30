@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Metadata: 
+  License: Apache-2.0
+Description: '
+template name: SecurityPolicy2BadTemplate.yml
+template type: bad
+Level: 1
+Number of violations: many
+Security policy: 
+Policy 0. Network Access
+Subrule1: Any Amazon EC2 cannot be publically accessible via dangerous ports (other than port 443 and 22)
+Subrule2: Any Amazon RDS for MySQL can be accessed only by web servers via port 3306
+Subrule3: Any Amazon S3 bucket cannot be publically accessible'
+Resources:
+  ### Create SecurityGroup 
+  ServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow https and ssh
+      VpcId: "vpc-eed9a589"
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '53'
+        ToPort: '53'
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: '0'
+        ToPort: '65535'
+        CidrIp: 0.0.0.0/0
+  MySecurityGrouptwo:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Full Open Egress
+      VpcId: "vpc-0c449369"
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '3306'
+        ToPort: '3306'
+        SourceSecurityGroupName:
+         !Ref ServerSecurityGroup
+  MySecurityGroupThree:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Full Open Egress
+      VpcId: "vpc-0c449369"
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '3306'
+        ToPort: '3306'
+        CidrIp: 0.0.0.0/0
+  S3BucketACLPR:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+  S3BucketACLPRW:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicReadWrite
